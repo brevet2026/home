@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Brevet PRO 2026 : Automatismes & Badges</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        .container { max-width: 850px; margin: 0 auto; }
+        .header {
+            background: #ffffff; border-radius: 15px; padding: 20px; text-align: center; 
+            margin-bottom: 20px; border-bottom: 5px solid #3498db; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .nav-score {
+            background: #fff; padding: 15px; border-radius: 10px; text-align: center;
+            position: sticky; top: 10px; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px;
+        }
+        .quiz-card { 
+            background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 6px solid #9b59b6;
+        }
+        .q-tag { font-weight: bold; text-transform: uppercase; font-size: 0.75em; color: #95a5a6; margin-bottom: 8px; display: block; }
+        .visual-area { margin: 15px 0; text-align: center; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px dashed #ddd; }
+        canvas { background: white; border: 1px solid #ccc; border-radius: 4px; max-width: 100%; }
+        
+        .input-group { display: flex; gap: 10px; margin-top: 15px; }
+        input { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1em; transition: 0.3s; }
+        input:focus { border-color: #3498db; outline: none; }
+        button.check { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .feedback { margin-top: 12px; padding: 12px; border-radius: 8px; display: none; font-size: 0.95em; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .results-panel { 
+            background: white; border-radius: 20px; padding: 40px; margin-top: 30px; 
+            display: none; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+        }
+        .badge-icon { font-size: 5em; margin-bottom: 10px; display: block; }
+        .score-text { font-size: 2em; font-weight: bold; margin-bottom: 20px; }
+        .restart-btn { background: #27ae60; color: white; padding: 15px 40px; border: none; border-radius: 30px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🏆 Défi des Fonctions & Automatismes</h1>
+        <p>Gagnez votre badge en maîtrisant les 4 domaines clés</p>
+    </div>
+
+    <div class="nav-score">
+        <div>Temps restant : <span id="timer" style="font-weight:bold; color:#e67e22;">10:00</span></div>
+        <div id="liveScore" style="font-weight:bold; color:#3498db;">Score : 0 / 10</div>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div style="text-align:center; margin: 40px 0;" id="finishZone">
+        <button onclick="showFinalResults()" style="background:#2c3e50; color:white; padding:15px 40px; border:none; border-radius:30px; font-size:1.1em; cursor:pointer;">🏁 Terminer et voir mon badge</button>
+    </div>
+
+    <div class="results-panel" id="resultsPanel"></div>
+</div>
+
+<script>
+let questions = [];
+let timeLeft = 600;
+let timerId;
+
+function drawGrid(ctx, rx, ry) {
+    const w = 250, h = 200, step = 25;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "#f0f0f0";
+    for(let i=0; i<=w; i+=step) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,h); ctx.stroke(); }
+    for(let i=0; i<=h; i+=step) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(w,i); ctx.stroke(); }
+    
+    ctx.strokeStyle = "#333"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+
+    // Courbe y = (ry/rx) * x
+    ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(w/2 - 100, h/2 + (100 * (ry/rx)));
+    ctx.lineTo(w/2 + 100, h/2 - (100 * (ry/rx)));
+    ctx.stroke();
+
+    // Point d'aide visuelle
+    ctx.fillStyle = "#3498db";
+    ctx.beginPath(); ctx.arc(w/2 + (rx*step), h/2 - (ry*step), 5, 0, 7); ctx.fill();
+}
+
+function startNewAttempt() {
+    questions = [];
+    document.getElementById('quizContainer').innerHTML = "";
+    document.getElementById('resultsPanel').style.display = "none";
+    document.getElementById('finishZone').style.display = "block";
+    document.getElementById('liveScore').innerText = "Score : 0 / 10";
+    timeLeft = 600;
+    
+    for(let i=0; i<10; i++) {
+        let type = i % 4;
+        let q = { id: i };
+        if(type === 0) {
+            let k = Math.floor(Math.random()*5)+2;
+            let val = [2, 4, 10][Math.floor(Math.random()*3)];
+            q.tag = "Proportionnalité";
+            q.text = `Si 1 kg de pommes coûte ${k}€, quel est le prix de ${val} kg ?`;
+            q.ans = (k * val).toString();
+            q.visual = `🍎 ${k} € / kg`;
+        } else if(type === 1) {
+            let p = [10, 20, 25, 50][Math.floor(Math.random()*4)];
+            let b = [40, 80, 100, 200][Math.floor(Math.random()*4)];
+            q.tag = "Pourcentages";
+            q.text = `Calculer ${p}% de ${b}€.`;
+            q.ans = ((b*p)/100).toString();
+            q.visual = `📊 Calcul de tête : ${p}%`;
+        } else if(type === 2) {
+            let a = Math.floor(Math.random()*4)+2;
+            let x = Math.floor(Math.random()*5)+1;
+            let isAnt = Math.random() > 0.5;
+            q.tag = "Fonctions (Vocabulaire)";
+            q.text = isAnt ? `Dans \\( f(x) = ${a}x \\), quel est l'antécédent de ${a*x} ?` : `Dans \\( f(x) = ${a}x \\), quelle est l'image de ${x} ?`;
+            q.ans = isAnt ? x.toString() : (a*x).toString();
+            q.visual = `\\( f(x) = ${a}x \\)`;
+        } else {
+            let rx = Math.floor(Math.random()*3)+1;
+            let ry = Math.floor(Math.random()*3)+1;
+            let isImg = Math.random() > 0.5;
+            q.tag = "Lecture Graphique";
+            q.text = isImg ? `Quelle est l'image de ${rx} ?` : `Quel est l'antécédent de ${ry} ?`;
+            q.ans = isImg ? ry.toString() : rx.toString();
+            q.isCanvas = true; q.rx = rx; q.ry = ry;
+        }
+        questions.push(q);
+    }
+    render();
+}
+
+function render() {
+    const container = document.getElementById('quizContainer');
+    questions.forEach((q, i) => {
+        let vis = q.isCanvas ? `<canvas id="c-${i}" width="250" height="200"></canvas>` : `<div class="visual-area">${q.visual}</div>`;
+        container.innerHTML += `
+            <div class="quiz-card">
+                <span class="q-tag">Question ${i+1} • ${q.tag}</span>
+                <div class="question-text">${q.text}</div>
+                <div style="text-align:center">${vis}</div>
+                <div class="input-group">
+                    <input type="text" id="in-${i}" placeholder="Réponse..." onkeypress="if(event.key==='Enter') check(${i})">
+                    <button class="check" onclick="check(${i})">Vérifier</button>
+                </div>
+                <div id="f-${i}" class="feedback"></div>
+            </div>
+        `;
+    });
+    questions.forEach((q, i) => { if(q.isCanvas) drawGrid(document.getElementById(`c-${i}`).getContext('2d'), q.rx, q.ry); });
+    MathJax.typeset();
+}
+
+function check(i) {
+    let val = document.getElementById(`in-${i}`).value.trim().replace(',', '.');
+    let f = document.getElementById(`f-${i}`);
+    f.style.display = "block";
+    if(val === questions[i].ans) {
+        f.className = "feedback correct"; f.innerHTML = "✅ Correct !";
+    } else {
+        f.className = "feedback incorrect"; f.innerHTML = `❌ Non, la réponse était ${questions[i].ans}.`;
+    }
+    document.getElementById('liveScore').innerText = `Score : ${document.querySelectorAll('.feedback.correct').length} / 10`;
+}
+
+function showFinalResults() {
+    clearInterval(timerId);
+    let score = document.querySelectorAll('.feedback.correct').length;
+    let panel = document.getElementById('resultsPanel');
+    document.getElementById('finishZone').style.display = "none";
+    panel.style.display = "block";
+    
+    let badge = "🥉", title = "BRONZE", color = "#cd7f32";
+    if(score === 10) { badge = "💎"; title = "DIAMANT"; color = "#00d2ff"; }
+    else if(score >= 8) { badge = "🥇"; title = "OR"; color = "#f1c40f"; }
+    else if(score >= 6) { badge = "🥈"; title = "ARGENT"; color = "#bdc3c7"; }
+
+    panel.innerHTML = `
+        <span class="badge-icon">${badge}</span>
+        <h2 style="color:${color}">${title}</h2>
+        <div class="score-text">Score final : ${score} / 10</div>
+        <button class="restart-btn" onclick="startNewAttempt()">🔄 Recommencer le défi</button>
+    `;
+    window.scrollTo({ top: panel.offsetTop, behavior: 'smooth' });
+}
+
+timerId = setInterval(() => {
+    timeLeft--;
+    let m = Math.floor(timeLeft/60), s = timeLeft % 60;
+    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    if(timeLeft <= 0) showFinalResults();
+}, 1000);
+
+startNewAttempt();
+</script>
+</body>
+</html>
