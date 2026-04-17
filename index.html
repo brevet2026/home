@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Révisions Brevet PRO 2026 - Mathématiques</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f0f4f8;
+            color: #2c3e50;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .hero {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border-bottom: 5px solid #3498db;
+        }
+        h1 { color: #2c3e50; margin-bottom: 15px; font-size: 2.2em; }
+        .description { color: #7f8c8d; font-size: 1.1em; max-width: 700px; margin: 0 auto; }
+
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chapter-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 6px solid #3498db;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .chapter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .chapter-card h3 { color: #2980b9; margin-bottom: 10px; }
+        .chapter-card p { font-size: 0.9em; color: #636e72; }
+        
+        .badge-preview {
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #27ae60;
+            background: #eafaf1;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Couleurs différentes par thématique */
+        .c-prop { border-left-color: #f1c40f; }
+        .c-arith { border-left-color: #e67e22; }
+        .c-func { border-left-color: #9b59b6; }
+        .c-affine { border-left-color: #e74c3c; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="hero">
+        <h1>🏆 Objectif Brevet PRO 2026</h1>
+        <p class="description">
+            Bienvenue sur ta plateforme d'entraînement aux <b>automatismes</b>. 
+            Chaque module est conçu pour t'aider à maîtriser les calculs rapides et les notions clés du programme. 
+            Relève le défi, obtiens le score maximum et décroche ton badge de champion !
+        </p>
+    </div>
+
+    <div class="chapter-grid">
+        <a href="proportionnalite.html" class="chapter-card c-prop">
+            <div>
+                <h3>Proportionnalité</h3>
+                <p>Ratios, produits en croix et situations de la vie courante.</p>
+            </div>
+            <span class="badge-preview">🎯 10 Questions</span>
+        </a>
+
+        <a href="arithmetique.html" class="chapter-card c-arith">
+            <div>
+                <h3>Arithmétique</h3>
+                <p>Diviseurs, multiples et nombres premiers.</p>
+            </div>
+            <span class="badge-preview">🔢 Entraînement rapide</span>
+        </a>
+
+        <a href="notions-fonctions.html" class="chapter-card c-func">
+            <div>
+                <h3>Notions de Fonctions</h3>
+                <p>Images, antécédents et lecture de graphiques.</p>
+            </div>
+            <span class="badge-preview">📈 Analyse visuelle</span>
+        </a>
+
+        <a href="fonctions-lineaires.html" class="chapter-card c-affine">
+            <div>
+                <h3>Fonctions Linéaires</h3>
+                <p>Modéliser une situation de proportionnalité avec f(x) = ax.</p>
+            </div>
+            <span class="badge-preview">🚀 Niveau Avancé</span>
+        </a>
+
+        <a href="fonctions-affines.html" class="chapter-card c-affine">
+            <div>
+                <h3>Fonctions Affines</h3>
+                <p>Comprendre le coefficient directeur et l'ordonnée à l'origine.</p>
+            </div>
+            <span class="badge-preview">📏 Droites et Graphiques</span>
+        </a>
+    </div>
+
+    <footer style="margin-top: 50px; text-align: center; color: #bdc3c7; font-size: 0.8em;">
+        <p>&copy; 2026 - Préparation au Brevet Professionnel</p>
+    </footer>
+</div>
+
+</body>
+</html>
