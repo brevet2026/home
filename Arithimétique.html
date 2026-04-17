@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Brevet PRO 2026 : Arithmétique</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        .container { max-width: 850px; margin: 0 auto; }
+        .header {
+            background: #ffffff; border-radius: 15px; padding: 20px; text-align: center; 
+            margin-bottom: 20px; border-bottom: 5px solid #3498db; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .nav-score {
+            background: #fff; padding: 15px; border-radius: 10px; text-align: center;
+            position: sticky; top: 10px; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px;
+        }
+        .quiz-card { 
+            background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 6px solid #e67e22;
+        }
+        .q-tag { font-weight: bold; text-transform: uppercase; font-size: 0.75em; color: #95a5a6; margin-bottom: 8px; display: block; }
+        .visual-area { margin: 15px 0; text-align: center; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px dashed #ddd; }
+        
+        .input-group { display: flex; gap: 10px; margin-top: 15px; }
+        input { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1em; transition: 0.3s; }
+        input:focus { border-color: #3498db; outline: none; }
+        button.check { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .feedback { margin-top: 12px; padding: 12px; border-radius: 8px; display: none; font-size: 0.95em; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .explanation { font-size: 0.85em; margin-top: 5px; font-style: italic; opacity: 0.8; }
+
+        .results-panel { 
+            background: white; border-radius: 20px; padding: 40px; margin-top: 30px; 
+            display: none; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+        }
+        .badge-icon { font-size: 5em; margin-bottom: 10px; display: block; }
+        .score-text { font-size: 2em; font-weight: bold; margin-bottom: 20px; }
+        .restart-btn { background: #27ae60; color: white; padding: 15px 40px; border: none; border-radius: 30px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
+        
+        .back-home { display: block; text-align: center; margin-bottom: 15px; text-decoration: none; color: #3498db; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-home">← Retour au menu principal</a>
+    
+    <div class="header">
+        <h1>🔢 Défi Arithmétique</h1>
+        <p>Gagnez votre badge en maîtrisant les nombres et leurs diviseurs</p>
+    </div>
+
+    <div class="nav-score">
+        <div>Temps restant : <span id="timer" style="font-weight:bold; color:#e67e22;">10:00</span></div>
+        <div id="liveScore" style="font-weight:bold; color:#3498db;">Score : 0 / 10</div>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div style="text-align:center; margin: 40px 0;" id="finishZone">
+        <button onclick="showFinalResults()" style="background:#2c3e50; color:white; padding:15px 40px; border:none; border-radius:30px; font-size:1.1em; cursor:pointer;">🏁 Terminer et voir mon badge</button>
+    </div>
+
+    <div class="results-panel" id="resultsPanel"></div>
+</div>
+
+<script>
+let questions = [];
+let timeLeft = 600;
+let timerId;
+
+function isPrime(num) {
+    if (num <= 1) return false;
+    for (let i = 2, s = Math.sqrt(num); i <= s; i++) if (num % i === 0) return false; 
+    return true;
+}
+
+function getPrimeDecomp(n) {
+    let d = 2, f = [], t = n;
+    while (t > 1) { while (t % d === 0) { f.push(d); t /= d; } d++; }
+    return f.join("x");
+}
+
+function startNewAttempt() {
+    questions = [];
+    document.getElementById('quizContainer').innerHTML = "";
+    document.getElementById('resultsPanel').style.display = "none";
+    document.getElementById('finishZone').style.display = "block";
+    document.getElementById('liveScore').innerText = "Score : 0 / 10";
+    timeLeft = 600;
+    
+    for(let i=0; i<10; i++) {
+        let r = Math.random();
+        let q = { id: i };
+        
+        if (r < 0.35) {
+            let n = [13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 49, 51][Math.floor(Math.random()*12)];
+            q.tag = "Nombres Premiers";
+            q.text = `Le nombre <b>${n}</b> est-il premier ? (oui/non)`;
+            q.ans = isPrime(n) ? "oui" : "non";
+            q.visual = `🔍 Analyse du nombre : ${n}`;
+            q.expl = isPrime(n) ? `${n} n'est divisible que par 1 et lui-même.` : `${n} possède d'autres diviseurs.`;
+        } else if (r < 0.7) {
+            let n = [12, 18, 20, 24, 28, 30, 36, 40, 45, 60][Math.floor(Math.random()*10)];
+            q.tag = "Décomposition";
+            q.text = `Décomposition en facteurs premiers de <b>${n}</b> (ex: 2x2x3) :`;
+            q.ans = getPrimeDecomp(n);
+            q.visual = `⚙️ Décomposer ${n}`;
+            q.expl = `On a : \\( ${getPrimeDecomp(n)} = ${n} \\).`;
+        } else {
+            let n = Math.floor(Math.random() * 250) + 50;
+            let d = [2, 3, 5, 9][Math.floor(Math.random()*4)];
+            q.tag = "Divisibilité";
+            q.text = `<b>${n}</b> est-il divisible par <b>${d}</b> ? (oui/non)`;
+            q.ans = n % d === 0 ? "oui" : "non";
+            q.visual = `⚖️ Critère de divisibilité par ${d}`;
+            q.expl = n % d === 0 ? `Le reste est nul.` : `Le reste n'est pas nul.`;
+        }
+        questions.push(q);
+    }
+    render();
+}
+
+function render() {
+    const container = document.getElementById('quizContainer');
+    questions.forEach((q, i) => {
+        container.innerHTML += `
+            <div class="quiz-card">
+                <span class="q-tag">Question ${i+1} • ${q.tag}</span>
+                <div class="question-text">${q.text}</div>
+                <div class="visual-area">${q.visual}</div>
+                <div class="input-group">
+                    <input type="text" id="in-${i}" placeholder="Ta réponse..." onkeypress="if(event.key==='Enter') check(${i})">
+                    <button class="check" onclick="check(${i})">Vérifier</button>
+                </div>
+                <div id="f-${i}" class="feedback"></div>
+            </div>
+        `;
+    });
+    MathJax.typeset();
+}
+
+function check(i) {
+    let val = document.getElementById(`in-${i}`).value.trim().toLowerCase().replace(/\s+/g, '');
+    let f = document.getElementById(`f-${i}`);
+    f.style.display = "block";
+    if(val === questions[i].ans) {
+        f.className = "feedback correct"; f.innerHTML = "✅ Correct !";
+    } else {
+        f.className = "feedback incorrect"; 
+        f.innerHTML = `❌ Non, c'était <b>${questions[i].ans}</b>. <div class="explanation">💡 ${questions[i].expl}</div>`;
+    }
+    document.getElementById('liveScore').innerText = `Score : ${document.querySelectorAll('.feedback.correct').length} / 10`;
+    MathJax.typeset();
+}
+
+function showFinalResults() {
+    clearInterval(timerId);
+    let score = document.querySelectorAll('.feedback.correct').length;
+    let panel = document.getElementById('resultsPanel');
+    document.getElementById('finishZone').style.display = "none";
+    panel.style.display = "block";
+    
+    let badge = "🥉", title = "BRONZE", color = "#cd7f32";
+    if(score === 10) { badge = "💎"; title = "DIAMANT"; color = "#00d2ff"; }
+    else if(score >= 8) { badge = "🥇"; title = "OR"; color = "#f1c40f"; }
+    else if(score >= 6) { badge = "🥈"; title = "ARGENT"; color = "#bdc3c7"; }
+
+    panel.innerHTML = `
+        <span class="badge-icon">${badge}</span>
+        <h2 style="color:${color}">${title}</h2>
+        <div class="score-text">Score final : ${score} / 10</div>
+        <button class="restart-btn" onclick="startNewAttempt()">🔄 Recommencer le défi</button>
+    `;
+    window.scrollTo({ top: panel.offsetTop, behavior: 'smooth' });
+}
+
+timerId = setInterval(() => {
+    timeLeft--;
+    let m = Math.floor(timeLeft/60), s = timeLeft % 60;
+    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    if(timeLeft <= 0) showFinalResults();
+}, 1000);
+
+startNewAttempt();
+</script>
+</body>
+</html>
