@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatisme PRO - Équilibré avec Grille</title>
+    <style>
+        :root { --primary: #1e3c72; --success: #28a745; --error: #dc3545; --bg: #f4f7f6; --accent: #d35400; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid var(--primary); }
+        .timer-box { font-size: 1.6em; font-weight: bold; color: var(--accent); background: #fff5e6; padding: 10px 25px; border-radius: 10px; display: inline-block; margin: 10px 0; border: 2px solid var(--accent); }
+        .quiz-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .math-expr { font-family: "Times New Roman", serif; font-style: italic; font-weight: bold; background: #eee; padding: 2px 5px; border-radius: 4px; }
+        
+        /* Grille et Graphique */
+        .graph-box { background: #fff; border: 1px solid #333; padding: 10px; border-radius: 8px; margin: 15px 0; text-align: center; }
+        .grid-line { stroke: #e0e0e0; stroke-width: 0.05; }
+        .axis-line { stroke: #333; stroke-width: 0.1; }
+
+        .input-group { display: flex; gap: 8px; margin: 15px 0; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; }
+        .btn-check { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .feedback { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 0.95em; }
+        .feedback.correct { background: #d4edda; border-left: 5px solid var(--success); color: #155724; }
+        .feedback.wrong { background: #f8d7da; border-left: 5px solid var(--error); color: #721c24; }
+        .cours-note { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; font-size: 0.85em; color: #555; }
+        #result-area { display: none; background: white; padding: 30px; border-radius: 15px; text-align: center; border: 4px solid var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🎯 Automatisme : Spécial Fonctions (Brevet)</h1>
+        <div class="timer-box">⏳ <span id="timer">20:00</span></div>
+        <p>15 questions • Lecture Graphique avec Grille • 20 minutes</p>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <div id="result-area">
+        <div id="badge-icon" style="font-size: 4em;"></div>
+        <h2 id="badge-rank"></h2>
+        <div id="score-text" style="font-size: 1.8em; font-weight: bold; margin: 15px 0;"></div>
+        <button onclick="location.reload()" style="padding:10px 25px; cursor:pointer; background:var(--primary); color:white; border:none; border-radius:20px;">🔄 Recommencer le test</button>
+    </div>
+
+    <div style="text-align:center; margin: 20px 0;">
+        <button id="finish-btn" onclick="showResults()" style="padding: 15px 40px; background: var(--success); color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer;">🏁 Voir mon Score et mon Badge</button>
+    </div>
+</div>
+
+<script>
+    const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    // Fonction pour générer le fond de grille SVG
+    function getSvgGrid(content) {
+        let lines = "";
+        for (let i = -5; i <= 5; i++) {
+            lines += `<line x1="${i}" y1="-5" x2="${i}" y2="5" class="grid-line" />`;
+            lines += `<line x1="-5" y1="${i}" x2="5" y2="${i}" class="grid-line" />`;
+        }
+        return `<svg width="200" height="200" viewBox="-5.5 -5.5 11 11">
+            ${lines}
+            <line x1="-5" y1="0" x2="5" y2="0" class="axis-line" stroke-width="0.1" />
+            <line x1="0" y1="-5" x2="0" y2="5" class="axis-line" stroke-width="0.1" />
+            <text x="4.5" y="0.5" font-size="0.4" fill="#333">x</text>
+            <text x="0.2" y="-4.5" font-size="0.4" fill="#333">y</text>
+            ${content}
+        </svg>`;
+    }
+
+    const generators = [
+        // 1. COEFFICIENT (Basé sur PDF p.1-2)
+        () => {
+            const a = getRandom(-10, 10) || 4;
+            return { text: `Quel est le coefficient de la fonction <span class="math-expr">h: x ↦ ${a}x</span> ?`, answer: `${a}`, cours: "Le coefficient est le nombre qui multiplie x dans l'expression." };
+        },
+        // 2. IMAGE (Basé sur PDF p.1)
+        () => {
+            const a = getRandom(2, 4); const x = getRandom(-3, 3); const b = getRandom(-5, 5);
+            return { text: `Calculer l'image de ${x} par la fonction <span class="math-expr">f(x) = ${a}x ${b < 0 ? b : '+ ' + b}</span>.`, answer: `${a * x + b}`, cours: "On remplace x par la valeur dans l'expression : f(" + x + ") = " + a + "×(" + x + ") + " + b };
+        },
+        // 3. ANTÉCÉDENT (Basé sur PDF p.2)
+        () => {
+            const a = getRandom(2, 5); const sol = getRandom(-4, 4);
+            return { text: `Quel est l'antécédent de ${a * sol} par la fonction <span class="math-expr">g: x ↦ ${a}x</span> ?`, answer: `${sol}`, cours: "On divise le résultat par le coefficient : x = image / coefficient." };
+        },
+        // 4. GRAPHIQUE (Lecture b sur grille)
+        () => {
+            const b = getRandom(-3, 3); const a = 1;
+            const line = `<line x1="-5" y1="${-(-5*a+b)}" x2="5" y2="${-(5*a+b)}" stroke="red" stroke-width="0.15" />`;
+            const point = `<circle cx="0" cy="${-b}" r="0.2" fill="blue" />`;
+            return { 
+                text: `Sur ce graphique, quelle est l'ordonnée à l'origine (valeur de <b>b</b>) ?`, 
+                answer: `${b}`, isGraph: true, svg: getSvgGrid(line + point),
+                cours: "C'est la valeur sur l'axe vertical là où la droite coupe l'axe (le point bleu)." 
+            };
+        },
+        // 5. PROBLÈME (Vie courante / Pourcentage)
+        () => {
+            const p = [10, 25, 50, 75][getRandom(0, 3)];
+            const coeff = (1 - p/100).toFixed(2);
+            return { text: `Une réduction de ${p}% correspond à multiplier par quel coefficient ?`, answer: `${coeff}`, cours: "Coefficient = 1 - (p / 100). Exemple : 1 - 0,25 = 0,75." }
+        }
+    ];
+
+    let questions = []; let score = 0; let answered = new Set(); let timeLeft = 1200;
+
+    // 3 questions de chaque type = 15 total
+    for(let i=0; i<5; i++) { for(let j=0; j<3; j++) { questions.push(generators[i]()); } }
+    questions.sort(() => Math.random() - 0.5);
+
+    const timerInterval = setInterval(() => {
+        let m = Math.floor(timeLeft / 60); let s = timeLeft % 60;
+        document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        if (timeLeft-- <= 0) { clearInterval(timerInterval); showResults(); }
+    }, 1000);
+
+    function render() {
+        const container = document.getElementById('quiz-container');
+        questions.forEach((q, i) => {
+            container.innerHTML += `<div class="quiz-card">
+                <strong>Question ${i+1} :</strong> ${q.text}
+                ${q.isGraph ? `<div class="graph-box">${q.svg}</div>` : ''}
+                <div class="input-group">
+                    <input type="text" id="input-${i}" placeholder="Réponse...">
+                    <button class="btn-check" id="btn-${i}" onclick="validate(${i})">Vérifier</button>
+                </div>
+                <div id="fb-${i}" class="feedback"></div>
+            </div>`;
+        });
+    }
+
+    window.validate = function(i) {
+        if (answered.has(i)) return;
+        const input = document.getElementById(`input-${i}`);
+        const val = input.value.trim().toLowerCase().replace(',', '.');
+        const fb = document.getElementById(`fb-${i}`);
+        fb.style.display = 'block';
+        if (val === questions[i].answer.toLowerCase()) {
+            fb.className = 'feedback correct'; fb.innerHTML = `✅ <b>Bien joué !</b>`; score++;
+        } else {
+            fb.className = 'feedback wrong'; fb.innerHTML = `❌ Erreur. La réponse était <b>${questions[i].answer}</b>.`;
+        }
+        fb.innerHTML += `<div class="cours-note">📖 <b>Rappel :</b> ${questions[i].cours}</div>`;
+        answered.add(i); input.disabled = true; document.getElementById(`btn-${i}`).disabled = true;
+    };
+
+    window.showResults = function() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('finish-btn').style.display = 'none';
+        const area = document.getElementById('result-area');
+        area.style.display = 'block';
+        document.getElementById('score-text').innerText = `Score : ${score} / 15`;
+        const icon = document.getElementById('badge-icon');
+        const rank = document.getElementById('badge-rank');
+        if (score >= 14) { icon.innerText = "🥇"; rank.innerText = "Badge d'Or"; }
+        else if (score >= 11) { icon.innerText = "🥈"; rank.innerText = "Badge d'Argent"; }
+        else if (score >= 8) { icon.innerText = "🥉"; rank.innerText = "Badge de Bronze"; }
+        else { icon.innerText = "📖"; rank.innerText = "À refaire"; }
+        window.scrollTo(0, 0);
+    };
+
+    render();
+</script>
+</body>
+</html>
